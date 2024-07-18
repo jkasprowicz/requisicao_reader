@@ -17,25 +17,6 @@ Backend: Django, Python
 Text Extraction: EasyOCR for accurate optical character recognition (OCR).
 Frontend: HTML, CSS (minimal for form handling and display).
 
-Directory Structure
-|-- manage.py
-|-- requirements.txt
-|-- myportfolio/
-|   |-- settings.py
-|   |-- urls.py
-|   |-- ...
-|-- static/
-|   |-- css/
-|   |   |-- style.css
-|   |-- js/
-|   |-- ...
-|-- templates/
-|   |-- upload.html
-|   |-- report.html
-|-- uploaded_images/
-|-- main.py (or views.py)
-|-- README.md
-
 Usage
 Upload Photo: Navigate to the homepage and upload a photo of the medical requisition. Click on "Upload Photo" to extract text and view identified exams.
 
