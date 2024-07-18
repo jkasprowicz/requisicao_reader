@@ -1,14 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Upload Image for OCR</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Page</title>
 </head>
 <body>
-    <h1>Upload Image for OCR</h1>
-    <form method="post" enctype="multipart/form-data">
+    <h2>Choose Input Method</h2>
+
+    <form action="" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="file" name="image" accept="image/*" required>
-        <button type="submit">Upload</button>
+        <button type="submit">Upload Photo</button>
+    </form>
+
+    <form action="" method="post">
+        {% csrf_token %}
+        <button type="submit" name="live_video_submit">Live Video Identification</button>
     </form>
 </body>
 </html>
