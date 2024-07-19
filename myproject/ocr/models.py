@@ -4,12 +4,8 @@ from django.db import models
 
 
 class Exam(models.Model):
-    name = models.CharField(max_length=255)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    paciente_nome = models.CharField(max_length=255)
-    convenio = models.CharField(max_length=255)
-    
-
+    exames = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='exam_images/', null=True)
 
     def __str__(self):
-        return self.name
+        return self.exames
