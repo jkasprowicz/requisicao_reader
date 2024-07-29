@@ -3,14 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report Page</title>
+    <title>Report</title>
 </head>
 <body>
-    <h2>Report Generated</h2>
-
+    <h2>Report</h2>
+    <p><strong>Name:</strong> {{ user_profile.name }}</p>
+    <p><strong>Birth Date:</strong> {{ user_profile.birth_date }}</p>
+    <p><strong>CPF:</strong> {{ user_profile.cpf }}</p>
+    
+    <h3>Exams</h3>
     <ul>
-        {% for exam in exams %}
-        <li>{{ exam }}</li>
+        {% for exam in user_profile.exams.all %}
+        <li>
+            {{ exam.exames }}
+            {% if exam.image %}
+            <br><img src="{{ exam.image.url }}" alt="Exam Image" style="max-width: 300px;">
+            {% endif %}
+        </li>
         {% endfor %}
     </ul>
 </body>

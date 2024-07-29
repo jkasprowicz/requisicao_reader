@@ -1,71 +1,128 @@
 import os
-import cv2
-import easyocr
 import uuid
-from django.shortcuts import render
+from django.conf import settings
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
-from .models import Exam
+from .models import UserProfile, Exam
+import easyocr
+import numpy as np
+from pdf2image import convert_from_path
+import cv2
+import re
 
-# Initialize EasyOCR with Portuguese language
+# Initialize EasyOCR
 reader = easyocr.Reader(['pt'])
 
-def preprocess_image(image_path):
-    image = cv2.imread(image_path)
-    if image is None:
-        raise ValueError(f"Image not loaded properly from path: {image_path}")
+def preprocess_image(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)
     return thresh
 
 def extract_text_from_image(image_path):
-    preprocessed_image = preprocess_image(image_path)
+    image = cv2.imread(image_path)
+    if image is None:
+        raise ValueError(f"Image not loaded properly from path: {image_path}")
+    preprocessed_image = preprocess_image(image)
     result = reader.readtext(preprocessed_image)
-    extracted_text = ' '.join([text[1] for text in result])  # Access the text element correctly
+    extracted_text = ' '.join([text[1] for text in result])
     return extracted_text
 
-def identify_exams(extracted_text):
-    exams = []
-    lines = extracted_text.split('\n')
-    for line in lines:
-        if "exam" in line.lower() or "test" in line.lower():
-            exams.append(line.strip())
-    return exams
+def extract_text_from_pdf(pdf_path):
+    images = convert_from_path(pdf_path)
+    text = ''
+    for image in images:
+        image_np = np.array(image)
+        preprocessed_image = preprocess_image(image_np)
+        result = reader.readtext(preprocessed_image)
+        text += ' '.join([text[1] for text in result]) + ' '
+    return text
+
+def extract_text_from_file(file_path):
+    if file_path.lower().endswith('.pdf'):
+        return extract_text_from_pdf(file_path)
+    return extract_text_from_image(file_path)
+
+def extract_info_from_text(text):
+    # Example regex patterns (adjust as needed)
+    name_pattern = r'Nome:\s*(.*)'
+    birth_date_pattern = r'Nascimento:\s*(\d{4}-\d{2}-\d{2})'
+    cpf_pattern = r'CPF:\s*(\d{11})'
+    
+    name_match = re.search(name_pattern, text)
+    birth_date_match = re.search(birth_date_pattern, text)
+    cpf_match = re.search(cpf_pattern, text)
+    
+    name = name_match.group(1) if name_match else 'Unknown'
+    birth_date = birth_date_match.group(1) if birth_date_match else '1900-01-01'
+    cpf = cpf_match.group(1) if cpf_match else '00000000000'
+    
+    return name, birth_date, cpf
 
 @csrf_exempt
-def ocr_view(request):
+def upload_document(request):
     if request.method == 'POST':
         if 'live_video_submit' in request.POST:
             # Handle live video input (to be implemented)
             return JsonResponse({'message': 'Live video functionality to be implemented'})
         
-        elif request.FILES.get('image'):
-            image_file = request.FILES['image']
-            image_name = f"{uuid.uuid4()}.jpg"  # Generate a unique name for the image
-            image_dir = os.path.join(settings.MEDIA_ROOT, 'exam_images')
-            image_path = os.path.join(image_dir, image_name)
+        elif request.FILES.get('document'):
+            file = request.FILES['document']
+            file_name = f"{uuid.uuid4()}.{file.name.split('.')[-1]}"  # Generate a unique name
+            file_path = os.path.join(settings.MEDIA_ROOT, 'user_documents', file_name)
 
-            # Create the directory if it doesn't exist
-            if not os.path.exists(image_dir):
-                os.makedirs(image_dir)
+            if not os.path.exists(os.path.dirname(file_path)):
+                os.makedirs(os.path.dirname(file_path))
             
-            with open(image_path, 'wb+') as destination:
-                for chunk in image_file.chunks():
+            with open(file_path, 'wb+') as destination:
+                for chunk in file.chunks():
                     destination.write(chunk)
-            
-            if not os.path.exists(image_path):
-                return JsonResponse({'error': 'Image file not saved properly'})
 
             try:
-                extracted_text = extract_text_from_image(image_path)
-                exams = identify_exams(extracted_text)
+                text = extract_text_from_file(file_path)
+                name, birth_date, cpf = extract_info_from_text(text)
                 
-                # Save the exam data along with the image path
-                exam_record = Exam(exames='; '.join(exams), image=f'exam_images/{image_name}')
-                exam_record.save()
+                user_profile = UserProfile(
+                    name=name,
+                    birth_date=birth_date,
+                    cpf=cpf,
+                    image=f'user_documents/{file_name}'
+                )
+                user_profile.save()
                 
-                return render(request, 'report.html', {'exams': exams})
+                return JsonResponse({'message': 'User profile created successfully', 'name': name, 'birth_date': birth_date, 'cpf': cpf})
             except ValueError as e:
                 return JsonResponse({'error': str(e)})
-    return render(request, 'upload.html')
+
+    return render(request, 'upload_document.html')
+
+
+@csrf_exempt
+def requisition_page(request, user_id):
+    user_profile = UserProfile.objects.get(id=user_id)
+    if request.method == 'POST':
+        requisition_file = request.FILES.get('requisition')
+        exam_image_file = request.FILES.get('exam_image')
+        if requisition_file:
+            # Save the requisition file
+            requisition_file_name = f"{uuid.uuid4()}.{requisition_file.name.split('.')[-1]}"
+            requisition_file_path = os.path.join(settings.MEDIA_ROOT, 'requisitions', requisition_file_name)
+
+            with open(requisition_file_path, 'wb+') as destination:
+                for chunk in requisition_file.chunks():
+                    destination.write(chunk)
+
+            # Process the requisition file (mocked here)
+            exam1 = Exam(exames="Blood Test", image=exam_image_file)
+            exam1.save()
+            user_profile.exams.add(exam1)
+            return redirect('report_page', user_id=user_profile.id)
+        else:
+            return JsonResponse({'error': 'No requisition file uploaded'})
+    
+    return render(request, 'requisition.html', {'user_id': user_id})
+
+def report_page(request, user_id):
+    user_profile = UserProfile.objects.get(id=user_id)
+    exams = user_profile.exams.all()
+    return render(request, 'report.html', {'user_profile': user_profile, 'exams': exams})
