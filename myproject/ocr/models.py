@@ -13,7 +13,11 @@ class UserProfile(models.Model):
 class Exam(models.Model):
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='exams')
     exames = models.CharField(max_length=255)
-    image = models.ImageField(upload_to='exam_images/', null=True, blank=True)  # Optional field
+    image = models.ImageField(upload_to='exam_images/', null=True, blank=True) 
 
     def __str__(self):
         return self.exames
+    
+class TextoExtraido(models.Model):
+    texto = models.CharField(max_length=300)
+    
