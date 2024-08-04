@@ -4,7 +4,7 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import UserProfile, Exam
+from .models import UserProfile, Exam, TextoExtraido
 import easyocr
 import numpy as np
 from pdf2image import convert_from_path
@@ -13,6 +13,11 @@ import re
 
 # Initialize EasyOCR
 reader = easyocr.Reader(['pt'])
+
+
+def recognize_text(img_path):    
+    reader = easyocr.Reader(['en'])
+    return reader.readtext(img_path)
 
 def preprocess_image(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -43,22 +48,6 @@ def extract_text_from_file(file_path):
         return extract_text_from_pdf(file_path)
     return extract_text_from_image(file_path)
 
-def extract_info_from_text(text):
-    # Example regex patterns (adjust as needed)
-    name_pattern = r'Nome:\s*(.*)'
-    birth_date_pattern = r'Nascimento:\s*(\d{4}-\d{2}-\d{2})'
-    cpf_pattern = r'CPF:\s*(\d{11})'
-    
-    name_match = re.search(name_pattern, text)
-    birth_date_match = re.search(birth_date_pattern, text)
-    cpf_match = re.search(cpf_pattern, text)
-    
-    name = name_match.group(1) if name_match else 'Unknown'
-    birth_date = birth_date_match.group(1) if birth_date_match else '1900-01-01'
-    cpf = cpf_match.group(1) if cpf_match else '00000000000'
-    
-    return name, birth_date, cpf
-
 @csrf_exempt
 def upload_document(request):
     if request.method == 'POST':
@@ -68,7 +57,7 @@ def upload_document(request):
         
         elif request.FILES.get('document'):
             file = request.FILES['document']
-            file_name = f"{uuid.uuid4()}.{file.name.split('.')[-1]}"  # Generate a unique name
+            file_name = f"{file.name.split('.')[-1]}"  
             file_path = os.path.join(settings.MEDIA_ROOT, 'user_documents', file_name)
 
             if not os.path.exists(os.path.dirname(file_path)):
@@ -79,8 +68,25 @@ def upload_document(request):
                     destination.write(chunk)
 
             try:
+
+                reconhecimento_texto = recognize_text(file_path)
+                print(reconhecimento_texto)
+
+                for (bbox, text, prob) in reconhecimento_texto:
+                    if prob >= 0.5:
+                        # display 
+                        print(f'Detected text: {text} (Probability: {prob:.2f})')
+    
+
+                salvar = TextoExtraido(texto=reconhecimento_texto)
+                salvar.save()
+
+                
+
                 text = extract_text_from_file(file_path)
                 name, birth_date, cpf = extract_info_from_text(text)
+
+
                 
                 user_profile = UserProfile(
                     name=name,
