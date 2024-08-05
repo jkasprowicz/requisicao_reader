@@ -5,7 +5,6 @@ class UserProfile(models.Model):
     name = models.CharField(max_length=255)
     birth_date = models.DateField()
     cpf = models.CharField(max_length=11, unique=True)
-    image = models.ImageField(upload_to='user_documents/')
 
     def __str__(self):
         return self.name
@@ -20,4 +19,4 @@ class Exam(models.Model):
     
 class TextoExtraido(models.Model):
     texto = models.CharField(max_length=300)
-    
+    image = models.ImageField(upload_to='overlay_images/', null=True, blank=True) 

@@ -10,6 +10,7 @@ import numpy as np
 from pdf2image import convert_from_path
 import cv2
 import re
+import matplotlib.pyplot as plt
 
 # Initialize EasyOCR
 reader = easyocr.Reader(['pt'])
@@ -60,6 +61,7 @@ def upload_document(request):
             file_name = f"{file.name.split('.')[-1]}"  
             file_path = os.path.join(settings.MEDIA_ROOT, 'user_documents', file_name)
 
+
             if not os.path.exists(os.path.dirname(file_path)):
                 os.makedirs(os.path.dirname(file_path))
             
@@ -72,31 +74,32 @@ def upload_document(request):
                 reconhecimento_texto = recognize_text(file_path)
                 print(reconhecimento_texto)
 
+
+
+                img = cv2.imread(file_path)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                
+                dpi = 80
+
                 for (bbox, text, prob) in reconhecimento_texto:
                     if prob >= 0.5:
                         # display 
                         print(f'Detected text: {text} (Probability: {prob:.2f})')
-    
+                        (top_left, top_right, bottom_right, bottom_left) = bbox
+                        top_left = (int(top_left[0]), int(top_left[1]))
+                        bottom_right = (int(bottom_right[0]), int(bottom_right[1]))
+                        cv2.rectangle(img=img, pt1=top_left, pt2=bottom_right, color=(255, 0, 0), thickness=10)
 
-                salvar = TextoExtraido(texto=reconhecimento_texto)
+                        cv2.putText(img=img, text=text, org=(top_left[0], top_left[1] - 10), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=(255, 0, 0), thickness=8)
+                    
+
+                cv2.imwrite('document.png', cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+
+                salvar = TextoExtraido(texto=reconhecimento_texto, image=img)
                 salvar.save()
 
                 
-
-                text = extract_text_from_file(file_path)
-                name, birth_date, cpf = extract_info_from_text(text)
-
-
-                
-                user_profile = UserProfile(
-                    name=name,
-                    birth_date=birth_date,
-                    cpf=cpf,
-                    image=f'user_documents/{file_name}'
-                )
-                user_profile.save()
-                
-                return JsonResponse({'message': 'User profile created successfully', 'name': name, 'birth_date': birth_date, 'cpf': cpf})
+                return JsonResponse({'message': 'User profile created successfully'})
             except ValueError as e:
                 return JsonResponse({'error': str(e)})
 
