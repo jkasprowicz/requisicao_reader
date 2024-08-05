@@ -1,20 +1,17 @@
-User Registration and Medical Requisition System
+🚀 User Registration & Medical Requisition System
 
-Project Overview
+🌟 Project Overview
+Welcome to the User Registration & Medical Requisition System! This cutting-edge project leverages the power of Optical Character Recognition (OCR) to simplify and streamline user registration and medical requisition processes. With this system, users can effortlessly register by uploading official documents, which are then analyzed to extract key details like name, birth date, and CPF (Brazilian individual taxpayer registry). Once registered, users can submit medical requisitions, and the system will automatically generate and display a comprehensive report with all relevant exam information.
 
-This project aims to streamline user registration and medical requisition processing using optical character recognition (OCR) technology. The system allows users to register by uploading official documents, which are then processed to extract relevant information such as name, birth date, and CPF (Brazilian individual taxpayer registry). After registration, users can submit medical requisitions, and the system will automatically extract and display the relevant exam information in a user report.
-
-Key Features
-
-Document Upload and OCR Extraction: Users can upload documents (PDFs or images), and the system uses EasyOCR to extract text. Key information such as name, birth date, and CPF is extracted and stored.
-Medical Requisition Submission: After registration, users can submit medical requisitions and associated images. The system processes and saves this information for further use.
-User Report Generation: A detailed report is generated for each user, showcasing the extracted information and any submitted exams.
-
-Technologies Used
-
-Python: The primary programming language used for the project.
-EasyOCR: For optical character recognition to extract text from documents.
-OpenCV: For image preprocessing and manipulation.
-Matplotlib: For visualizing data and generating plots.
-NumPy: For numerical operations and image processing.
-Django: The web framework used to build the application.
+🔥 Key Features
+Document Upload & OCR Extraction: Upload PDFs or images, and let EasyOCR do the magic. Extract and store essential information such as name, birth date, and CPF with ease.
+Medical Requisition Submission: Submit medical requisitions and associated images after registration. The system processes and saves all the details for future use.
+User Report Generation: Get a detailed, easy-to-read report showcasing extracted information and any submitted exams.
+🛠️ Technologies Used
+Python: The core language driving the project.
+EasyOCR: For powerful optical character recognition and text extraction.
+OpenCV: To handle image preprocessing and manipulation.
+Matplotlib: For creating stunning visualizations and plots.
+NumPy: For numerical operations and advanced image processing.
+Django: The robust web framework powering the application.
+Dive in and explore how OCR technology can revolutionize user registration and medical requisition processes!
