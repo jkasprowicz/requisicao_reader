@@ -9,6 +9,7 @@ Key Features
 Document Upload and OCR Extraction: Users can upload documents (PDFs or images), and the system uses EasyOCR to extract text. Key information such as name, birth date, and CPF is extracted and stored.
 Medical Requisition Submission: After registration, users can submit medical requisitions and associated images. The system processes and saves this information for further use.
 User Report Generation: A detailed report is generated for each user, showcasing the extracted information and any submitted exams.
+
 Technologies Used
 
 Python: The primary programming language used for the project.
