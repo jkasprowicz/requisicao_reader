@@ -1,27 +1,19 @@
-# requisicao_reader
+User Registration and Medical Requisition System
 
-Medical Requisition Text Extraction
+Project Overview
 
-This Django application extracts text from medical requisitions using EasyOCR, allowing users to upload photos or use live video for real-time identification.
+This project aims to streamline user registration and medical requisition processing using optical character recognition (OCR) technology. The system allows users to register by uploading official documents, which are then processed to extract relevant information such as name, birth date, and CPF (Brazilian individual taxpayer registry). After registration, users can submit medical requisitions, and the system will automatically extract and display the relevant exam information in a user report.
 
-Goals
+Key Features
 
-Text Extraction: Extract text from medical requisitions (handwritten or printed) to identify exams and tests listed.
-Input Methods: Support photo upload and live video input for real-time text identification.
-Reporting: Generate a report of identified exams/tests from the extracted text.
-Implementation
-
+Document Upload and OCR Extraction: Users can upload documents (PDFs or images), and the system uses EasyOCR to extract text. Key information such as name, birth date, and CPF is extracted and stored.
+Medical Requisition Submission: After registration, users can submit medical requisitions and associated images. The system processes and saves this information for further use.
+User Report Generation: A detailed report is generated for each user, showcasing the extracted information and any submitted exams.
 Technologies Used
 
-Backend: Django, Python
-Text Extraction: EasyOCR for accurate optical character recognition (OCR).
-Frontend: HTML, CSS (minimal for form handling and display).
-
-Usage
-Upload Photo: Navigate to the homepage and upload a photo of the medical requisition. Click on "Upload Photo" to extract text and view identified exams.
-
-Live Video Identification: Click on "Live Video Identification" to use your device's camera for real-time text extraction from medical requisitions.
-
-Notes
-Ensure your environment has opencv-python and easyocr installed for image processing and text extraction capabilities.
-Adjust frontend templates (upload.html and report.html) and styles (style.css) as per your design preferences.
+Python: The primary programming language used for the project.
+EasyOCR: For optical character recognition to extract text from documents.
+OpenCV: For image preprocessing and manipulation.
+Matplotlib: For visualizing data and generating plots.
+NumPy: For numerical operations and image processing.
+Django: The web framework used to build the application.
