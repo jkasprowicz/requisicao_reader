@@ -32,32 +32,42 @@ def extract_profile_info(ocr_text):
     cpf_pattern = re.compile(r'\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11}')
     date_pattern = re.compile(r'\d{2}/\d{2}/\d{4}')
 
-    
+    # Variables to store matches for comparison
+    cpf_matches = []
+    date_matches = []
 
     for bbox, text, prob in ocr_text:
         text = text.strip()
 
         # Extract CPF
         cpf_match = cpf_pattern.search(text)
-
-        print(cpf_match)
-
         if cpf_match:
-            profile_info['cpf'] = cpf_match.group()
-        
+            cpf_matches.append(cpf_match.group())
+
         # Extract date (assuming it's a birth date)
         date_match = date_pattern.search(text)
         if date_match:
-            try:
-                profile_info['birth_date'] = datetime.strptime(date_match.group(), "%d/%m/%Y").date()
-            except ValueError:
-                # Handle parsing error if necessary
-                pass
+            date_matches.append(date_match.group())
 
         # Extract name based on common name patterns
         # Assuming name is often a line with multiple words and proper case
-        if len(text.split()) > 1 and not (profile_info['name'] or profile_info['cpf'] or profile_info['birth_date']):
+        if len(text.split()) > 1 and not profile_info['name']:
             profile_info['name'] = text
+
+    # Determine most likely CPF match
+    if cpf_matches:
+        # Prefer formatted CPF if available
+        cpf_matches.sort(key=lambda x: len(x))
+        profile_info['cpf'] = cpf_matches[-1]
+
+    # Determine most likely date match
+    if date_matches:
+        # Prefer the oldest date for birth date
+        date_matches.sort(key=lambda x: datetime.strptime(x, "%d/%m/%Y"))
+        try:
+            profile_info['birth_date'] = datetime.strptime(date_matches[0], "%d/%m/%Y").date()
+        except ValueError:
+            pass
 
     return profile_info
 
