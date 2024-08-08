@@ -32,27 +32,30 @@ def extract_profile_info(ocr_text):
     cpf_pattern = re.compile(r'\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11}')
     date_pattern = re.compile(r'\d{2}/\d{2}/\d{4}')
 
+    name = None
+
     # Variables to store matches for comparison
     cpf_matches = []
     date_matches = []
+    potential_names = []
 
     for bbox, text, prob in ocr_text:
         text = text.strip()
 
-        # Extract CPF
+        print(text)
+
         cpf_match = cpf_pattern.search(text)
         if cpf_match:
             cpf_matches.append(cpf_match.group())
 
-        # Extract date (assuming it's a birth date)
         date_match = date_pattern.search(text)
         if date_match:
             date_matches.append(date_match.group())
 
-        # Extract name based on common name patterns
-        # Assuming name is often a line with multiple words and proper case
-        if len(text.split()) > 1 and not profile_info['name']:
-            profile_info['name'] = text
+
+        name_matches = name_pattern.findall(text)
+        if name_matches:
+            potential_names.extend(name_matches)
 
     # Determine most likely CPF match
     if cpf_matches:
@@ -68,6 +71,13 @@ def extract_profile_info(ocr_text):
             profile_info['birth_date'] = datetime.strptime(date_matches[0], "%d/%m/%Y").date()
         except ValueError:
             pass
+
+    if potential_names:
+        # Use a heuristic to select the most probable name
+        # For example, you might pick the longest name or the one that seems most appropriate
+        profile_info['name'] = potential_names[0] if potential_names else None
+        print(potential_names)
+
 
     return profile_info
 
