@@ -28,6 +28,38 @@ def recognize_text(img_path):
     reader = easyocr.Reader(['pt'])
     return reader.readtext(img_path)
 
+
+def extract_name_from_text(ocr_text):
+    name_section_started = False
+    potential_names = []
+    
+    # Define keywords indicating names
+    name_indicators = ['NOME', 'SOBRENOME']
+    
+    # Define a regex pattern for detecting names
+    name_pattern = re.compile(r'^[A-Z][A-ZÀ-ÖØ-Ý]+\s[A-Z][A-ZÀ-ÖØ-Ý]+(?:\s[A-Z][A-ZÀ-ÖØ-Ý]+)?$')
+    
+    for bbox, text, prob in ocr_text:
+        text = text.strip()
+        
+        # Check if current text is a keyword indicating names
+        if any(keyword in text for keyword in name_indicators):
+            name_section_started = True
+            continue
+        
+        # Extract names based on pattern if in the name section
+        if name_section_started:
+            if name_pattern.match(text):
+                potential_names.append(text)
+            # Optional: End section if the text looks unrelated to names
+            if len(potential_names) > 0 and not name_pattern.match(text) and text not in name_indicators:
+                break
+    
+    # Return the most likely name or combine names if multiple detected
+    if potential_names:
+        return ' '.join(potential_names)
+    return None
+
 def extract_profile_info(ocr_text):
     profile_info = {
         'name': None,
@@ -37,31 +69,24 @@ def extract_profile_info(ocr_text):
 
     # Regex patterns for CPF and date extraction
     cpf_pattern = re.compile(r'\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11}')
-    name_pattern = re.compile(r'[A-Z][a-z]+(?: [A-Z][a-z]+)+')
-    
+    date_pattern = re.compile(r'\d{2}/\d{2}/\d{4}')    
 
-    # Variables to store matches for comparison
     cpf_matches = []
     date_matches = []
-    potential_names = []
+
+    
+
 
     for bbox, text, prob in ocr_text:
         text = text.strip()
-
-        print(text)
 
         cpf_match = cpf_pattern.search(text)
         if cpf_match:
             cpf_matches.append(cpf_match.group())
 
-
-        ner_results = nlp(text)
-        print(ner_results)
-
-
-        name_matches = name_pattern.findall(text)
-        if name_matches:
-            potential_names.extend(name_matches)
+        date_match = date_pattern.search(text)
+        if date_match:
+            date_matches.append(date_match.group())
 
     # Determine most likely CPF match
     if cpf_matches:
@@ -77,9 +102,6 @@ def extract_profile_info(ocr_text):
             profile_info['birth_date'] = datetime.strptime(date_matches[0], "%d/%m/%Y").date()
         except ValueError:
             pass
-
-    if potential_names:
-        profile_info['name'] = potential_names[0]
 
 
     return profile_info
@@ -143,13 +165,13 @@ def upload_document(request):
                         cv2.rectangle(img=img, pt1=top_left, pt2=bottom_right, color=(255, 0, 0), thickness=10)
 
                         cv2.putText(img=img, text=text, org=(top_left[0], top_left[1] - 10), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=(255, 0, 0), thickness=8)
-                    
+        
 
                 cv2.imwrite('document.png', cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
                 profile_info = extract_profile_info(reconhecimento_texto)
 
-                print(profile_info)
+                print('profile info:', profile_info)
                 
                 if profile_info:
                     success = save_user_profile(profile_info)
