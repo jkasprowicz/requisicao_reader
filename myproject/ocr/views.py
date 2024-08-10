@@ -12,9 +12,16 @@ import cv2
 import re
 import matplotlib.pyplot as plt
 from datetime import datetime
+from transformers import AutoTokenizer, AutoModelForTokenClassification
+from transformers import pipeline
 
 # Initialize EasyOCR
 reader = easyocr.Reader(['pt'])
+
+tokenizer = AutoTokenizer.from_pretrained("dslim/bert-base-NER")
+model = AutoModelForTokenClassification.from_pretrained("dslim/bert-base-NER")
+
+nlp = pipeline("ner", model=model, tokenizer=tokenizer)
 
 
 def recognize_text(img_path):    
@@ -30,9 +37,8 @@ def extract_profile_info(ocr_text):
 
     # Regex patterns for CPF and date extraction
     cpf_pattern = re.compile(r'\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11}')
-    date_pattern = re.compile(r'\d{2}/\d{2}/\d{4}')
-
-    name = None
+    name_pattern = re.compile(r'[A-Z][a-z]+(?: [A-Z][a-z]+)+')
+    
 
     # Variables to store matches for comparison
     cpf_matches = []
@@ -48,9 +54,9 @@ def extract_profile_info(ocr_text):
         if cpf_match:
             cpf_matches.append(cpf_match.group())
 
-        date_match = date_pattern.search(text)
-        if date_match:
-            date_matches.append(date_match.group())
+
+        ner_results = nlp(text)
+        print(ner_results)
 
 
         name_matches = name_pattern.findall(text)
@@ -73,10 +79,7 @@ def extract_profile_info(ocr_text):
             pass
 
     if potential_names:
-        # Use a heuristic to select the most probable name
-        # For example, you might pick the longest name or the one that seems most appropriate
-        profile_info['name'] = potential_names[0] if potential_names else None
-        print(potential_names)
+        profile_info['name'] = potential_names[0]
 
 
     return profile_info
