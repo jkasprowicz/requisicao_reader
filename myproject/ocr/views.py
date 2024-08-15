@@ -18,11 +18,6 @@ from transformers import pipeline
 # Initialize EasyOCR
 reader = easyocr.Reader(['pt'])
 
-tokenizer = AutoTokenizer.from_pretrained("dslim/bert-base-NER")
-model = AutoModelForTokenClassification.from_pretrained("dslim/bert-base-NER")
-
-nlp = pipeline("ner", model=model, tokenizer=tokenizer)
-
 
 def recognize_text(img_path):    
     reader = easyocr.Reader(['pt'])
@@ -55,14 +50,12 @@ def extract_name_from_text(ocr_text):
             if len(potential_names) > 0 and not name_pattern.match(text) and text not in name_indicators:
                 break
     
-    # Return the most likely name or combine names if multiple detected
     if potential_names:
         return ' '.join(potential_names)
     return None
 
 def extract_profile_info(ocr_text):
     profile_info = {
-        'name': None,
         'cpf': None,
         'birth_date': None
     }
@@ -88,32 +81,29 @@ def extract_profile_info(ocr_text):
         if date_match:
             date_matches.append(date_match.group())
 
-    # Determine most likely CPF match
+
+        
     if cpf_matches:
-        # Prefer formatted CPF if available
         cpf_matches.sort(key=lambda x: len(x))
         profile_info['cpf'] = cpf_matches[-1]
 
-    # Determine most likely date match
     if date_matches:
-        # Prefer the oldest date for birth date
         date_matches.sort(key=lambda x: datetime.strptime(x, "%d/%m/%Y"))
         try:
             profile_info['birth_date'] = datetime.strptime(date_matches[0], "%d/%m/%Y").date()
         except ValueError:
             pass
 
-
     return profile_info
 
 
-def save_user_profile(profile_info):
+def save_user_profile(profile_info, potential_names):
     try:
 
-        print("Profile Info:", profile_info)
+        print('potencial names:',potential_names)
 
         profile = UserProfile(
-            name=profile_info['name'],
+            name=potential_names['name'],
             cpf=profile_info['cpf'],
             birth_date=profile_info['birth_date']
         )
@@ -171,10 +161,13 @@ def upload_document(request):
 
                 profile_info = extract_profile_info(reconhecimento_texto)
 
+                potential_names = extract_name_from_text(reconhecimento_texto)
+
                 print('profile info:', profile_info)
                 
                 if profile_info:
-                    success = save_user_profile(profile_info)
+                    success = save_user_profile(profile_info, potential_names)
+                    print(success)
                     if success:
                         print('User profile saved successfully')
                     else:
